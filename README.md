@@ -4,31 +4,6 @@ improvement of the original Open Led Race project by G. Barbov 2019
 
 ---
 
-## VERSIONE ITALIANA
-
-**Cos'è:**  
-Open LED Race 900 è una gara di “macchinine” virtuali per strip LED Neopixel, ispirata al progetto originale OpenLED Race di G. Barbarov e pesantemente migliorata e personalizzata da Marcello Caselli (mcasel98), con l’assistenza di GitHub Copilot.
-
-**Funzionalità principali:**
-- Animazione di benvenuto e attività box prima della partenza
-- Countdown con semaforo Ready-Set-Go!
-- Messaggi grafici su LED matrix: leader, giro, ultimo giro, vincitore
-- ALERT "ULTIMO GIRO!!" sempre completo e senza bloccare la gara
-- Logica totalmente non bloccante: la gara non si ferma mai!
-- Premiazione podio, musica per il vincitore e animazione bandiera finale
-- Riporto automatico delle macchine sulla linea di partenza ad ogni nuova gara
-
-**Attenzione ai credits:**
-- Progetto originale: G. Barbarov (gbarbarov@singulardevices.com)
-  - https://github.com/gbarbarov/led-race
-- Upgrade logico, effetti e ottimizzazione: Marcello Caselli (2026)
-- Consulenza e code design: GitHub Copilot / OpenAI
-
-**Licenza:**  
-Distribuito con licenza GPLv3 come progetto originario.
-
----
-
 ## ENGLISH VERSION
 
 **What is this:**  
@@ -56,5 +31,33 @@ Distributed under GPLv3, as the original project.
 
 **Enjoy racing, unleash your creativity, and share your improvements!**
 
+---
+
+## VERSIONE ITALIANA
+
+**Cos'è:**  
+Open LED Race 900 è una gara di “macchinine” virtuali per strip LED Neopixel, ispirata al progetto originale OpenLED Race di G. Barbarov e pesantemente migliorata e personalizzata da Marcello Caselli (mcasel98), con l’assistenza di GitHub Copilot.
+
+**Funzionalità principali:**
+- Animazione di benvenuto e attività box prima della partenza
+- Countdown con semaforo Ready-Set-Go!
+- Messaggi grafici su LED matrix: leader, giro, ultimo giro, vincitore
+- ALERT "ULTIMO GIRO!!" sempre completo e senza bloccare la gara
+- Logica totalmente non bloccante: la gara non si ferma mai!
+- Premiazione podio, musica per il vincitore e animazione bandiera finale
+- Riporto automatico delle macchine sulla linea di partenza ad ogni nuova gara
+
+**Attenzione ai credits:**
+- Progetto originale: G. Barbarov (gbarbarov@singulardevices.com)
+  - https://github.com/gbarbarov/led-race
+- Upgrade logico, effetti e ottimizzazione: Marcello Caselli (2026)
+- Consulenza e code design: GitHub Copilot / OpenAI
+
+**Licenza:**  
+Distribuito con licenza GPLv3 come progetto originario.
+
+
 Marcello Caselli & GitHub Copilot  
 2026
+
+
