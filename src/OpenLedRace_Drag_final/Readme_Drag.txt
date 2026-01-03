@@ -45,7 +45,7 @@ https://github.com/mcasel98/Led-Race900
 ## VERSIONE ITALIANA
 
 **Cos'è:**  
-Open LED Race 900 è una gara di “macchinine” virtuali per strip LED Neopixel, ispirata al progetto originale OpenLED Race di G. Barbarov e pesantemente migliorata e personalizzata da Marcello Caselli (mcasel98), con l’assistenza di GitHub Copilot.
+Open LED Race 900 DRAG è una gara di “macchinine” virtuali per strip LED Neopixel, ispirata al progetto originale OpenLED Race di G. Barbarov e pesantemente migliorata e personalizzata da Marcello Caselli (mcasel98), con l’assistenza di GitHub Copilot.
 
 **Funzionalità principali:**
 - Animazione di benvenuto e attività box prima della partenza
