@@ -1,44 +1,11 @@
-# Open LED Race 900 T
-
----
-
-## VERSIONE ITALIANA
-
-**Cos'è:**  
-Open LED Race 900 è una gara di “macchinine” virtuali per strip LED Neopixel, ispirata al progetto originale OpenLED Race di G. Barbarov e pesantemente migliorata e personalizzata da Marcello Caselli (mcasel98), con l’assistenza di GitHub Copilot.
-
-**Funzionalità principali:**
-- Animazione di benvenuto e attività box prima della partenza
-- Countdown con semaforo Ready-Set-Go!
-- Messaggi grafici su LED matrix: leader, giro, ultimo giro, vincitore
-- ALERT "ULTIMO GIRO!!" sempre completo e senza bloccare la gara
-- Logica totalmente non bloccante: la gara non si ferma mai!
-- Premiazione podio, musica per il vincitore e animazione bandiera finale
-- Riporto automatico delle macchine sulla linea di partenza ad ogni nuova gara
-- **Nuovo effetto SCIA dinamico:**  
-    Quando la velocità della macchina supera un valore di soglia (`2.0`),  
-    il leader mostra una scia luminosa a 4 led (corpo+tail+2 led fading); il secondo una scia da 3 led.  
-    Questo simula l’effetto “drag” delle gare F1, ben visibile in gara!  
-
-**File 3D stampabili (STL):**
-Nella cartella `/stl` sono inclusi modelli per la realizzazione del case LedRace900 e dei pulsanti:
-- **Button_Case_Base.stl** : base per pulsanti di gioco
-- **LedRace900-Corpo.stl** : corpo/case stampabile della pista
-
-**Attenzione ai credits:**
-- Progetto originale: G. Barbarov ([repo OpenLedRace](https://github.com/gbarbarov/led-race))
-- Upgrade logico, effetti e ottimizzazione: Marcello Caselli (2026)
-- Consulenza e code design: GitHub Copilot / OpenAI
-
-**Licenza:**  
-Distribuito con licenza GPLv3 come progetto originario.
+# Open LED Race 900 DRAG
 
 ---
 
 ## ENGLISH VERSION
 
 **What is this:**  
-Open LED Race 900 is a virtual cars race for Neopixel LED strips, based on the OpenLED Race project by G. Barbarov and greatly improved and customized by Marcello Caselli (mcasel98), with the smart help of GitHub Copilot.
+Open LED Race 900 DRAG is a virtual cars race for Neopixel LED strips, based on the OpenLED Race project by G. Barbarov and greatly improved and customized by Marcello Caselli (mcasel98), with the smart help of GitHub Copilot.
 
 **Main features:**
 - Welcome animation, "pit box" activity before the race
@@ -69,6 +36,44 @@ Distributed under GPLv3, as the original project.
 ---
 
 **Enjoy racing, unleash your creativity, and share your improvements!**
+
+Marcello Caselli & GitHub Copilot  
+https://github.com/mcasel98/Led-Race900  
+2026
+
+
+## VERSIONE ITALIANA
+
+**Cos'è:**  
+Open LED Race 900 DRAG è una gara di “macchinine” virtuali per strip LED Neopixel, ispirata al progetto originale OpenLED Race di G. Barbarov e pesantemente migliorata e personalizzata da Marcello Caselli (mcasel98), con l’assistenza di GitHub Copilot.
+
+**Funzionalità principali:**
+- Animazione di benvenuto e attività box prima della partenza
+- Countdown con semaforo Ready-Set-Go!
+- Messaggi grafici su LED matrix: leader, giro, ultimo giro, vincitore
+- ALERT "ULTIMO GIRO!!" sempre completo e senza bloccare la gara
+- Logica totalmente non bloccante: la gara non si ferma mai!
+- Premiazione podio, musica per il vincitore e animazione bandiera finale
+- Riporto automatico delle macchine sulla linea di partenza ad ogni nuova gara
+- **Nuovo effetto SCIA dinamico:**  
+    Quando la velocità della macchina supera un valore di soglia (`2.0`),  
+    il leader mostra una scia luminosa a 4 led (corpo+tail+2 led fading); il secondo una scia da 3 led.  
+    Questo simula l’effetto “drag” delle gare F1, ben visibile in gara!  
+
+**File 3D stampabili (STL):**
+Nella cartella `/stl` sono inclusi modelli per la realizzazione del case LedRace900 e dei pulsanti:
+- **Button_Case_Base.stl** : base per pulsanti di gioco
+- **LedRace900-Corpo.stl** : corpo/case stampabile della pista
+
+**Attenzione ai credits:**
+- Progetto originale: G. Barbarov ([repo OpenLedRace](https://github.com/gbarbarov/led-race))
+- Upgrade logico, effetti e ottimizzazione: Marcello Caselli (2026)
+- Consulenza e code design: GitHub Copilot / OpenAI
+
+**Licenza:**  
+Distribuito con licenza GPLv3 come progetto originario.
+
+---
 
 Marcello Caselli & GitHub Copilot  
 https://github.com/mcasel98/Led-Race900  
