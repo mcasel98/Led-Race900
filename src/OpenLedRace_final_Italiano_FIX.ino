@@ -39,7 +39,7 @@
  - Fully non-blocking game logic: "FINAL LAP!!" always shows completely, racing never pauses
 
  Released under the same GPLv3 license.
- For full release and source: to be done
+ For full release and source: https://github.com/mcasel98/Led-Race900
 */
 
 #include <Adafruit_NeoPixel.h>
@@ -48,7 +48,7 @@
 #include <SPI.h>
 
 constexpr int NUM_CARS     = 5;
-constexpr int NUM_LAPS     = 4; // Numero effettivo di giri della gara
+constexpr int NUM_LAPS     = 4;
 constexpr int TRACK_PIXELS = 900;
 
 constexpr int PIN_LED_DATA       = A0;
@@ -107,14 +107,16 @@ bool resultBlinkState = false;
 int resetCarIndex = 0;
 bool resetCarAnimating = false;
 float lerpPos = 0.0;
-// PATCH: nuovo flag per lo stato "ultimo giro mostrato"
-bool ultimoGiroMostrato = false;
 
-// Matrix state per LAP/LEADS
+// --- PATCH gestione stato messaggio ULTIMO GIRO ---
+bool showUltimoGiroActive = false;   // SE true = il matrix è dedicato alla scritta
+bool ultimoGiroShownOnce = false;    // SE true = la finestra è già stata passata
+unsigned long ultimoGiroLedStart = 0;
+bool ultimoGiroLedEffectDone = false;
+
+/*** STATO MATRIX ***/
 bool showingLapMsg = false;
 int currentLeaderIdx = -1;
-
-// Per WINNER loop
 char lastWinnerText[80] = "";
 
 /*** GRAFICA BASE ***/
@@ -161,20 +163,23 @@ void resetRace() {
   showingLapMsg = false;
   winner_announced = false;
   currentLeaderIdx = -1;
-  ultimoGiroMostrato = false; // PATCH: azzera il flag ultimo giro ad ogni nuova gara!
+  showUltimoGiroActive = false;
+  ultimoGiroShownOnce = false;
+  ultimoGiroLedStart = 0;
+  ultimoGiroLedEffectDone = false;
   lastWinnerText[0]=0;
 }
 
-/*** COUNTDOWN ITALIANO CON SEMAFORO ROSSO-GIALLO-VERDE ***/
+/*** COUNTDOWN CON SEMAFORO ROSSO-GIALLO-VERDE ***/
 void raceCountdown() {
   struct {
     const char* text;
     uint32_t color;
     int freq;
   } steps[] = {
-    {"   PRONTI   ",       track.Color(255,0,0), 660},        // ROSSO
-    {"   ATTENTI   ",      track.Color(255,255,0), 880},      // GIALLO
-    {"   VIA!   ",         track.Color(0,255,0),    1320}     // VERDE
+    {"   PRONTI   ",       track.Color(255,0,0), 660},
+    {"   ATTENTI   ",      track.Color(255,255,0), 880},
+    {"   VIA!   ",         track.Color(0,255,0),    1320}
   };
   for (int s=0; s<3; ++s) {
     for (int i=0; i<50 && i<TRACK_PIXELS; ++i)
@@ -185,7 +190,7 @@ void raceCountdown() {
 
     matrix.displayClear();
     matrix.displayText(steps[s].text, PA_CENTER, 12, 0, PA_SCROLL_LEFT, PA_SCROLL_LEFT);
-    while (!matrix.displayAnimate()) {} // Scroll completo
+    while (!matrix.displayAnimate()) {}
     matrix.displayReset();
 
     tone(PIN_AUDIO, steps[s].freq);
@@ -236,7 +241,7 @@ void animateCarReset() {
   }
 }
 
-/*** DISPLAY GARA (LAP/LEADER) ITA - PATCH: "ULTIMO GIRO" ora SEMPRE VISIBILE ***/
+/*** DISPLAY GARA: "ULTIMO GIRO" SEMPRE COMPLETO, NESSUN BLOCCO LOGICA ***/
 void displayRaceEssentialMessage() {
   static char currentDisplayBuf[64] = "";
   static char lastTextSet[64] = "";
@@ -249,36 +254,45 @@ void displayRaceEssentialMessage() {
     }
   }
 
-  // PATCH: mostra "ULTIMO GIRO" una volta appena si entra nell'ultimo giro!
-  if (!ultimoGiroMostrato && lapNow == NUM_LAPS-1) {
+  // Gestione super robusta "ULTIMO GIRO!!"
+  if (!showUltimoGiroActive && !ultimoGiroShownOnce && lapNow == NUM_LAPS-1) {
+    showUltimoGiroActive = true;
+    ultimoGiroLedStart = millis();
+    ultimoGiroLedEffectDone = false;
     matrix.displayClear();
     matrix.displayText("   ULTIMO GIRO!!   ", PA_CENTER, 12, 0, PA_SCROLL_LEFT, PA_SCROLL_LEFT);
     strcpy(lastTextSet, "ULTIMO GIRO");
-    ultimoGiroMostrato = true;
-
-    // Effetto led come nella tua versione
-    for (int r=0; r<3; ++r) {
-      for (int i=0; i<30 && i<TRACK_PIXELS; ++i)
-        track.setPixelColor(i, (r==1) ? track.Color(180,0,180) : track.Color(220,220,255));
+  }
+  if (showUltimoGiroActive) {
+    // Effetto led come sempre (trial non-bloccante)
+    if (!ultimoGiroLedEffectDone) {
+      unsigned long animTime = millis() - ultimoGiroLedStart;
+      int animStep = animTime / 400;
+      uint32_t c = (animStep==1) ? track.Color(180,0,180) : track.Color(220,220,255);
+      for (int i=0; i<30 && i<TRACK_PIXELS; ++i) track.setPixelColor(i, c);
       track.show();
-      delay(170);
+      if (animStep >= 2) {
+        for (int i=0; i<30 && i<TRACK_PIXELS; ++i) track.setPixelColor(i,0);
+        track.show();
+        ultimoGiroLedEffectDone = true;
+      }
     }
-    for (int i=0; i<30 && i<TRACK_PIXELS; ++i) track.setPixelColor(i,0);
-    track.show();
-
-    // Attendi che il messaggio abbia scrollato via prima di continuare
-    while (!matrix.displayAnimate()) {}
-    matrix.displayReset();
-    lastTextSet[0]=0;
+    // Mantieni display matrix SOLO su "ULTIMO GIRO" finché non ha scrollato via tutto!
+    if (matrix.displayAnimate()) {
+      matrix.displayReset();
+      showUltimoGiroActive = false;
+      ultimoGiroShownOnce = true;
+      lastTextSet[0]=0;
+    }
     return;
   }
 
-  // GIRO X/Y ABBREVIATO: solo "n/4" scroll più veloce (speed=6)
+  // Classico: giro n/4
   if (lapNow != lastLapShowed) {
     snprintf(currentDisplayBuf, sizeof(currentDisplayBuf), "   %d/%d   ", (lapNow < NUM_LAPS ? lapNow+1 : NUM_LAPS), NUM_LAPS);
     if (strcmp(lastTextSet, currentDisplayBuf) != 0) {
       matrix.displayClear();
-      matrix.displayText(currentDisplayBuf, PA_CENTER, 6, 0, PA_SCROLL_LEFT, PA_SCROLL_LEFT); // scroll più veloce
+      matrix.displayText(currentDisplayBuf, PA_CENTER, 6, 0, PA_SCROLL_LEFT, PA_SCROLL_LEFT);
       strcpy(lastTextSet, currentDisplayBuf);
     }
     if (matrix.displayAnimate()) {
@@ -289,21 +303,19 @@ void displayRaceEssentialMessage() {
     return;
   }
 
-  // LEADER: scroll più veloce anche qui (speed=6)
-  snprintf(currentDisplayBuf, sizeof(currentDisplayBuf), "   %s   ->   ", CAR_COLOR_NAMES[leader_idx]);
+  snprintf(currentDisplayBuf, sizeof(currentDisplayBuf), "   %s   1o   ", CAR_COLOR_NAMES[leader_idx]);
   if (strcmp(lastTextSet, currentDisplayBuf) != 0) {
     matrix.displayClear();
-    matrix.displayText(currentDisplayBuf, PA_CENTER, 6, 0, PA_SCROLL_LEFT, PA_SCROLL_LEFT); // scroll più veloce
+    matrix.displayText(currentDisplayBuf, PA_CENTER, 6, 0, PA_SCROLL_LEFT, PA_SCROLL_LEFT);
     strcpy(lastTextSet, currentDisplayBuf);
   }
   if (matrix.displayAnimate()) {
     matrix.displayReset();
-    matrix.displayText(currentDisplayBuf, PA_CENTER, 6, 0, PA_SCROLL_LEFT, PA_SCROLL_LEFT); // scroll più veloce
+    matrix.displayText(currentDisplayBuf, PA_CENTER, 6, 0, PA_SCROLL_LEFT, PA_SCROLL_LEFT);
     strcpy(lastTextSet, currentDisplayBuf);
   }
 }
 
-/*** DISPLAY WINNER: SCROLL LOOP ITA ***/
 void displayWinnerLoopMessage() {
   int safeWinnerIdx = winnerIdx;
   if (safeWinnerIdx < 0 || safeWinnerIdx >= NUM_CARS) safeWinnerIdx = 0;
@@ -319,7 +331,6 @@ void displayWinnerLoopMessage() {
   }
 }
 
-/*** PODIO E WINNER (ITA) ***/
 void computeFinishingOrder() {
   struct CarRank { int idx; float laps; float dist; } cr[NUM_CARS];
   for (int i = 0; i < NUM_CARS; ++i) {
@@ -363,7 +374,6 @@ void playWinnerFx(int carIdx) {
   winnerIdx = carIdx;
 }
 
-/*** FISICA E LOGICA DI GARA - invariata ***/
 void updatePhysics() {
   for (int i = 0; i < NUM_CARS; ++i) {
     bool pressed = (digitalRead(PIN_CAR[i]) == LOW);

@@ -39,7 +39,7 @@
  - Fully non-blocking game logic: "FINAL LAP!!" always shows completely, racing never pauses
 
  Released under the same GPLv3 license.
- For full release and source: to be done
+ For full release and source: https://github.com/mcasel98/Led-Race900
 */
 
 #include <Adafruit_NeoPixel.h>
