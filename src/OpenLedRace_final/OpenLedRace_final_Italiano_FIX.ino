@@ -62,7 +62,8 @@ constexpr int LED_MATRIX_CLK     = 11;
 constexpr int LED_MATRIX_DEV     = 4;
 constexpr auto LED_MATRIX_HW     = MD_MAX72XX::FC16_HW;
 
-constexpr float ACCELERATION     = 0.126f;
+//constexpr float ACCELERATION     = 0.126f;
+constexpr float ACCELERATION     = 0.150f;
 constexpr float FRICTION         = 0.012f;
 constexpr float GRAVITY_CONST    = 0.003f;
 constexpr int   GRAVITY_BASE     = 127;
