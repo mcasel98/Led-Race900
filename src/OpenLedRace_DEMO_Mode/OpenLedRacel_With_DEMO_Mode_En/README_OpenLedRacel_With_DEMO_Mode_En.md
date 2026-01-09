@@ -1,4 +1,4 @@
-# Open LED Race 900 – English README
+# Open LED Race 900 - with integrated Demo Mode – English README
 
 ## Project Description
 
