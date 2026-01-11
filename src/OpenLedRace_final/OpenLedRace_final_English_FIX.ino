@@ -62,8 +62,7 @@ constexpr int LED_MATRIX_CLK     = 11;
 constexpr int LED_MATRIX_DEV     = 4;
 constexpr auto LED_MATRIX_HW     = MD_MAX72XX::FC16_HW;
 
-//constexpr float ACCELERATION     = 0.126f;
-constexpr float ACCELERATION     = 0.150f;
+constexpr float ACCELERATION     = 0.126f;
 constexpr float FRICTION         = 0.012f;
 constexpr float GRAVITY_CONST    = 0.003f;
 constexpr int   GRAVITY_BASE     = 127;
@@ -303,7 +302,7 @@ void displayRaceEssentialMessage() {
     return;
   }
 
-  snprintf(currentDisplayBuf, sizeof(currentDisplayBuf), "   %s   1o   ", CAR_COLOR_NAMES[leader_idx]);
+  snprintf(currentDisplayBuf, sizeof(currentDisplayBuf), "   %s   1st   ", CAR_COLOR_NAMES[leader_idx]);
   if (strcmp(lastTextSet, currentDisplayBuf) != 0) {
     matrix.displayClear();
     matrix.displayText(currentDisplayBuf, PA_CENTER, 6, 0, PA_SCROLL_LEFT, PA_SCROLL_LEFT);
