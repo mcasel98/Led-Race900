@@ -75,7 +75,7 @@ constexpr const char* CAR_COLOR_NAMES[NUM_CARS] = {
   "ROSSO", "VERDE", "BLU", "BIANCO", "GIALLO"
 };
 
-enum class RaceState : uint8_t { WAITING, RACING, WINNER, RESULTS, RESET_CARS };
+enum class RaceState : uint8_t { WAITING, RACING, WINNER, RESULTS, RESET_CARS, DEMO_RACING, DEMO_WINNER };
 
 struct Car {
   float distance    = 0;
@@ -119,6 +119,39 @@ bool ultimoGiroLedEffectDone = false;
 bool showingLapMsg = false;
 int currentLeaderIdx = -1;
 char lastWinnerText[80] = "";
+
+/*** DEBOUNCE START BUTTON ***/
+constexpr unsigned long DEBOUNCE_MS = 50;
+bool startBtnState = HIGH;
+bool lastStartBtnReading = HIGH;
+unsigned long lastDebounceTime = 0;
+
+/*** DEMO MODE - COMPLETELY ISOLATED ***/
+// DEMO state variables with DEMO_ prefix for complete isolation
+bool DEMO_active = false;
+Car DEMO_cars[NUM_CARS];
+int DEMO_tbeep = 0;
+int DEMO_winnerIdx = -1;
+bool DEMO_winner_announced = false;
+unsigned long DEMO_winnerShowMillis = 0;
+bool DEMO_showUltimoGiroActive = false;
+bool DEMO_ultimoGiroShownOnce = false;
+unsigned long DEMO_ultimoGiroLedStart = 0;
+bool DEMO_ultimoGiroLedEffectDone = false;
+char DEMO_lastWinnerText[80] = "";
+
+// Virtual player simulation variables
+struct DEMO_VirtualPlayer {
+  float pressFrequency;        // Current press frequency in Hz (2-5 Hz)
+  unsigned long lastPressTime;
+  unsigned long nextFreqChange;
+  unsigned long lastFreqChangeTime;
+};
+DEMO_VirtualPlayer DEMO_players[NUM_CARS];
+
+// START button hold detection for mode entry/exit
+unsigned long startPressedTime = 0;
+bool startWasPressed = false;
 
 /*** GRAFICA BASE ***/
 void drawBaseTrack() {
@@ -169,6 +202,219 @@ void resetRace() {
   ultimoGiroLedStart = 0;
   ultimoGiroLedEffectDone = false;
   lastWinnerText[0]=0;
+}
+
+/*** DEBOUNCE START BUTTON ***/
+bool debounceStartButton() {
+  bool reading = digitalRead(PIN_START);
+  
+  if (reading != lastStartBtnReading) {
+    lastDebounceTime = millis();
+  }
+  
+  if ((millis() - lastDebounceTime) > DEBOUNCE_MS) {
+    if (reading != startBtnState) {
+      startBtnState = reading;
+    }
+  }
+  
+  lastStartBtnReading = reading;
+  return (startBtnState == LOW);
+}
+
+/*** DEMO MODE FUNCTIONS - COMPLETELY ISOLATED ***/
+void DEMO_resetRace() {
+  memset(DEMO_cars, 0, sizeof(DEMO_cars));
+  DEMO_tbeep = 0;
+  DEMO_winnerIdx = -1;
+  DEMO_winnerShowMillis = 0;
+  DEMO_winner_announced = false;
+  DEMO_showUltimoGiroActive = false;
+  DEMO_ultimoGiroShownOnce = false;
+  DEMO_ultimoGiroLedStart = 0;
+  DEMO_ultimoGiroLedEffectDone = false;
+  DEMO_lastWinnerText[0] = 0;
+  
+  // Initialize virtual players
+  for (int i = 0; i < NUM_CARS; ++i) {
+    DEMO_players[i].pressFrequency = random(200, 501) / 100.0f; // 2-5 Hz
+    DEMO_players[i].lastPressTime = 0;
+    DEMO_players[i].nextFreqChange = random(1000, 3501); // 1-3.5 seconds
+    DEMO_players[i].lastFreqChangeTime = millis();
+  }
+}
+
+void DEMO_updateVirtualPlayers() {
+  unsigned long now = millis();
+  
+  for (int i = 0; i < NUM_CARS; ++i) {
+    // Update press frequency periodically (every 1-3.5 seconds)
+    if (now - DEMO_players[i].lastFreqChangeTime >= DEMO_players[i].nextFreqChange) {
+      DEMO_players[i].pressFrequency = random(200, 501) / 100.0f; // 2-5 Hz
+      DEMO_players[i].nextFreqChange = random(1000, 3501); // Next change in 1-3.5 seconds
+      DEMO_players[i].lastFreqChangeTime = now;
+    }
+    
+    // Simulate button press based on frequency
+    unsigned long pressPeriod = (unsigned long)(1000.0f / DEMO_players[i].pressFrequency);
+    
+    if (now - DEMO_players[i].lastPressTime >= pressPeriod) {
+      if (DEMO_cars[i].accel_ready) {
+        DEMO_cars[i].speed += ACCELERATION;
+        DEMO_cars[i].accel_ready = false;
+      }
+      DEMO_players[i].lastPressTime = now;
+    } else {
+      DEMO_cars[i].accel_ready = true;
+    }
+  }
+}
+
+void DEMO_updatePhysics() {
+  for (int i = 0; i < NUM_CARS; ++i) {
+    int pos = static_cast<int>(DEMO_cars[i].distance) % TRACK_PIXELS;
+    if (gravity_map[pos] < GRAVITY_BASE)
+      DEMO_cars[i].speed -= GRAVITY_CONST * (GRAVITY_BASE - gravity_map[pos]);
+    else if (gravity_map[pos] > GRAVITY_BASE)
+      DEMO_cars[i].speed += GRAVITY_CONST * (gravity_map[pos] - GRAVITY_BASE);
+
+    DEMO_cars[i].speed -= DEMO_cars[i].speed * FRICTION;
+    DEMO_cars[i].distance += DEMO_cars[i].speed;
+    if (DEMO_cars[i].distance > TRACK_PIXELS * (DEMO_cars[i].laps + 1)) {
+      ++DEMO_cars[i].laps;
+      tone(PIN_AUDIO, 700 + 100 * i);
+      DEMO_tbeep = 3;
+    }
+  }
+}
+
+void DEMO_drawCars() {
+  int order[NUM_CARS];
+  for (int i = 0; i < NUM_CARS; ++i) order[i] = i;
+  for (int i = 0; i < NUM_CARS - 1; ++i)
+    for (int j = 0; j < NUM_CARS - 1 - i; ++j)
+      if (DEMO_cars[order[j]].distance > DEMO_cars[order[j + 1]].distance) {
+        int temp = order[j]; order[j] = order[j + 1]; order[j + 1] = temp;
+      }
+  for (int i = 0; i < NUM_CARS; ++i) {
+    int idx = order[i];
+    int pos = static_cast<int>(DEMO_cars[idx].distance) % TRACK_PIXELS;
+    track.setPixelColor(pos, CAR_COLORS[idx]);
+    int tailpos = (pos > 0) ? pos - 1 : TRACK_PIXELS - 1;
+    track.setPixelColor(tailpos, CAR_COLORS[idx] & 0x2F2F2F);
+  }
+}
+
+void DEMO_displayRaceMessage() {
+  static char currentDisplayBuf[64] = "";
+  static char lastTextSet[64] = "";
+  static int lastLapShowed = -2;
+  int leader_idx = 0, lapNow = 0; float leaderDist = -1;
+
+  for (int i = 0; i < NUM_CARS; ++i) {
+    if (DEMO_cars[i].laps > lapNow || (DEMO_cars[i].laps == lapNow && DEMO_cars[i].distance > leaderDist)) {
+      leader_idx = i; lapNow = DEMO_cars[i].laps; leaderDist = DEMO_cars[i].distance;
+    }
+  }
+
+  // Gestione "ULTIMO GIRO!!"
+  if (!DEMO_showUltimoGiroActive && !DEMO_ultimoGiroShownOnce && lapNow == NUM_LAPS-1) {
+    DEMO_showUltimoGiroActive = true;
+    DEMO_ultimoGiroLedStart = millis();
+    DEMO_ultimoGiroLedEffectDone = false;
+    matrix.displayClear();
+    matrix.displayText("   ULTIMO GIRO!!   ", PA_CENTER, 12, 0, PA_SCROLL_LEFT, PA_SCROLL_LEFT);
+    strcpy(lastTextSet, "ULTIMO GIRO");
+  }
+  if (DEMO_showUltimoGiroActive) {
+    if (!DEMO_ultimoGiroLedEffectDone) {
+      unsigned long animTime = millis() - DEMO_ultimoGiroLedStart;
+      int animStep = animTime / 400;
+      uint32_t c = (animStep==1) ? track.Color(180,0,180) : track.Color(220,220,255);
+      for (int i=0; i<30 && i<TRACK_PIXELS; ++i) track.setPixelColor(i, c);
+      track.show();
+      if (animStep >= 2) {
+        for (int i=0; i<30 && i<TRACK_PIXELS; ++i) track.setPixelColor(i,0);
+        track.show();
+        DEMO_ultimoGiroLedEffectDone = true;
+      }
+    }
+    if (matrix.displayAnimate()) {
+      matrix.displayReset();
+      DEMO_showUltimoGiroActive = false;
+      DEMO_ultimoGiroShownOnce = true;
+      lastTextSet[0]=0;
+    }
+    return;
+  }
+
+  // Giro n/4
+  if (lapNow != lastLapShowed) {
+    snprintf(currentDisplayBuf, sizeof(currentDisplayBuf), "   %d/%d   ", (lapNow < NUM_LAPS ? lapNow+1 : NUM_LAPS), NUM_LAPS);
+    if (strcmp(lastTextSet, currentDisplayBuf) != 0) {
+      matrix.displayClear();
+      matrix.displayText(currentDisplayBuf, PA_CENTER, 6, 0, PA_SCROLL_LEFT, PA_SCROLL_LEFT);
+      strcpy(lastTextSet, currentDisplayBuf);
+    }
+    if (matrix.displayAnimate()) {
+      matrix.displayReset();
+      lastLapShowed = lapNow;
+      lastTextSet[0]=0;
+    }
+    return;
+  }
+
+  snprintf(currentDisplayBuf, sizeof(currentDisplayBuf), "   %s   1o   ", CAR_COLOR_NAMES[leader_idx]);
+  if (strcmp(lastTextSet, currentDisplayBuf) != 0) {
+    matrix.displayClear();
+    matrix.displayText(currentDisplayBuf, PA_CENTER, 6, 0, PA_SCROLL_LEFT, PA_SCROLL_LEFT);
+    strcpy(lastTextSet, currentDisplayBuf);
+  }
+  if (matrix.displayAnimate()) {
+    matrix.displayReset();
+    matrix.displayText(currentDisplayBuf, PA_CENTER, 6, 0, PA_SCROLL_LEFT, PA_SCROLL_LEFT);
+    strcpy(lastTextSet, currentDisplayBuf);
+  }
+}
+
+void DEMO_displayWinnerMessage() {
+  int safeWinnerIdx = DEMO_winnerIdx;
+  if (safeWinnerIdx < 0 || safeWinnerIdx >= NUM_CARS) safeWinnerIdx = 0;
+  char win_msg_demo[80];
+  snprintf(win_msg_demo, sizeof(win_msg_demo), "   %s   VINCE   LA   GARA!   [DEMO]   ", CAR_COLOR_NAMES[safeWinnerIdx]);
+  if (strcmp(DEMO_lastWinnerText, win_msg_demo) != 0) {
+    matrix.displayClear();
+    matrix.displayText(win_msg_demo, PA_CENTER, 28, 0, PA_SCROLL_LEFT, PA_SCROLL_LEFT);
+    strcpy(DEMO_lastWinnerText, win_msg_demo);
+  }
+  if (matrix.displayAnimate()) {
+    matrix.displayReset();
+    matrix.displayText(win_msg_demo, PA_CENTER, 28, 0, PA_SCROLL_LEFT, PA_SCROLL_LEFT);
+  }
+}
+
+void DEMO_playWinnerFx(int carIdx) {
+  for (int i = 0; i < (TRACK_PIXELS > 30 ? 30 : TRACK_PIXELS); ++i) track.setPixelColor(i, CAR_COLORS[carIdx]);
+  track.show();
+  int sz = sizeof(WIN_MUSIC) / sizeof(int);
+  for (int note = 0; note < sz; ++note) {
+    if (WIN_MUSIC[note] > 0) tone(PIN_AUDIO, WIN_MUSIC[note], 200);
+    delay(200); noTone(PIN_AUDIO);
+  }
+  DEMO_winnerIdx = carIdx;
+}
+
+void DEMO_checkForWinner() {
+  if (DEMO_winner_announced) return;
+  for (int i = 0; i < NUM_CARS; ++i) {
+    if (DEMO_cars[i].laps >= NUM_LAPS) {
+      DEMO_winner_announced = true;
+      DEMO_playWinnerFx(i);
+      gameState = RaceState::DEMO_WINNER;
+      DEMO_winnerShowMillis = millis();
+      break;
+    }
+  }
 }
 
 /*** COUNTDOWN CON SEMAFORO ROSSO-GIALLO-VERDE ***/
@@ -430,6 +676,31 @@ void setup() {
 }
 
 void loop() {
+  // Check for DEMO mode exit in any DEMO state (hold START for 2 seconds)
+  if (gameState == RaceState::DEMO_RACING || gameState == RaceState::DEMO_WINNER) {
+    bool btnPressed = debounceStartButton();
+    
+    if (btnPressed && !startWasPressed) {
+      startPressedTime = millis();
+      startWasPressed = true;
+    }
+    
+    if (btnPressed && startWasPressed && (millis() - startPressedTime >= 2000)) {
+      // Exit DEMO mode and perform hardware reset
+      matrix.displayClear();
+      matrix.displayText("   USCITA DEMO - RESET...   ", PA_CENTER, 20, 0, PA_SCROLL_LEFT, PA_SCROLL_LEFT);
+      while (!matrix.displayAnimate()) {}
+      delay(500);
+      
+      // Perform Arduino hardware reset
+      asm volatile ("jmp 0");
+    }
+    
+    if (!btnPressed) {
+      startWasPressed = false;
+    }
+  }
+  
   switch (gameState) {
   case RaceState::WAITING:
     drawBaseTrack(); drawBoxAnimation();
@@ -440,14 +711,68 @@ void loop() {
       welcomeMessageSet = true;
     }
     if (matrix.displayAnimate()) matrix.displayReset();
-    if (digitalRead(PIN_START) == LOW) {
-      while (digitalRead(PIN_START) == LOW);
-      welcomeMessageSet = false;
-      raceCountdown();
-      resetRace();
-      gameState = RaceState::RACING;
+    
+    // Check for START button press with debounce
+    {
+      bool btnPressed = debounceStartButton();
+      
+      if (btnPressed && !startWasPressed) {
+        startPressedTime = millis();
+        startWasPressed = true;
+      }
+      
+      // Check if held for 3+ seconds for DEMO mode
+      if (btnPressed && startWasPressed && (millis() - startPressedTime >= 3000)) {
+        // Enter DEMO mode
+        welcomeMessageSet = false;
+        matrix.displayClear();
+        matrix.displayText("   MODALITA' DEMO ATTIVATA!   ", PA_CENTER, 20, 0, PA_SCROLL_LEFT, PA_SCROLL_LEFT);
+        while (!matrix.displayAnimate()) {}
+        delay(500);
+        
+        DEMO_resetRace();
+        raceCountdown();
+        DEMO_active = true;
+        gameState = RaceState::DEMO_RACING;
+        startWasPressed = false;
+      }
+      // Normal race start (button released before 3 seconds)
+      else if (!btnPressed && startWasPressed && (millis() - startPressedTime < 3000)) {
+        welcomeMessageSet = false;
+        raceCountdown();
+        resetRace();
+        gameState = RaceState::RACING;
+        startWasPressed = false;
+      }
+      
+      if (!btnPressed) {
+        startWasPressed = false;
+      }
     }
     break;
+    
+  case RaceState::DEMO_RACING:
+    DEMO_updateVirtualPlayers();
+    DEMO_updatePhysics();
+    DEMO_checkForWinner();
+    DEMO_displayRaceMessage();
+    drawBaseTrack(); 
+    DEMO_drawCars();
+    track.show();
+    if (DEMO_tbeep > 0 && --DEMO_tbeep == 0) noTone(PIN_AUDIO);
+    delay(ANIM_FRAME_MS);
+    break;
+    
+  case RaceState::DEMO_WINNER:
+    DEMO_displayWinnerMessage();
+    if (DEMO_winnerShowMillis != 0 && millis() - DEMO_winnerShowMillis > 5000) {
+      // Restart DEMO race
+      DEMO_resetRace();
+      raceCountdown();
+      gameState = RaceState::DEMO_RACING;
+    }
+    break;
+    
   case RaceState::RACING:
     updatePhysics();
     checkForWinner();
