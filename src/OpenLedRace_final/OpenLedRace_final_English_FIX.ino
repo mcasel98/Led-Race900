@@ -46,6 +46,7 @@
 #include <MD_Parola.h>
 #include <MD_MAX72xx.h>
 #include <SPI.h>
+#include <avr/wdt.h>  // For watchdog timer reset
 
 constexpr int NUM_CARS     = 5;
 constexpr int NUM_LAPS     = 4;
@@ -202,6 +203,18 @@ void resetRace() {
   finalLapLedStart = 0;
   finalLapLedEffectDone = false;
   lastWinnerText[0]=0;
+}
+
+/*** SAFE ARDUINO RESET FUNCTION ***/
+void(*resetFunc)(void) = 0; // Declare reset function at address 0
+
+void performSafeReset() {
+  // Disable interrupts
+  cli();
+  // Enable watchdog with shortest timeout
+  wdt_enable(WDTO_15MS);
+  // Wait for watchdog reset
+  while(1) {}
 }
 
 /*** DEBOUNCE START BUTTON ***/
@@ -688,11 +701,14 @@ void loop() {
       // Exit DEMO mode and perform hardware reset
       matrix.displayClear();
       matrix.displayText("   EXIT DEMO - RESET...   ", PA_CENTER, 20, 0, PA_SCROLL_LEFT, PA_SCROLL_LEFT);
-      while (!matrix.displayAnimate()) {}
+      
+      // Display message with timeout
+      unsigned long msgStart = millis();
+      while (!matrix.displayAnimate() && (millis() - msgStart < 2000)) {}
       delay(500);
       
-      // Perform Arduino hardware reset
-      asm volatile ("jmp 0");
+      // Perform Arduino hardware reset using watchdog timer
+      performSafeReset();
     }
     
     if (!btnPressed) {
@@ -726,7 +742,10 @@ void loop() {
         welcomeMessageSet = false;
         matrix.displayClear();
         matrix.displayText("   DEMO MODE ACTIVATED!   ", PA_CENTER, 20, 0, PA_SCROLL_LEFT, PA_SCROLL_LEFT);
-        while (!matrix.displayAnimate()) {}
+        
+        // Display message with timeout
+        unsigned long msgStart = millis();
+        while (!matrix.displayAnimate() && (millis() - msgStart < 2000)) {}
         delay(500);
         
         DEMO_resetRace();
