@@ -206,8 +206,6 @@ void resetRace() {
 }
 
 /*** SAFE ARDUINO RESET FUNCTION ***/
-void(*resetFunc)(void) = 0; // Declare reset function at address 0
-
 void performSafeReset() {
   // Disable interrupts
   cli();

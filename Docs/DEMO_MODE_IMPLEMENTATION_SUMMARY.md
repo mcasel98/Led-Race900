@@ -75,8 +75,20 @@ if (btnPressed && startWasPressed && (millis() - startPressedTime >= 3000)) {
 
 // Exit: Hold START 2 seconds in any DEMO state
 if (btnPressed && startWasPressed && (millis() - startPressedTime >= 2000)) {
-    // Perform Arduino hardware reset
-    asm volatile ("jmp 0");
+    // Perform Arduino hardware reset using watchdog timer
+    performSafeReset();
+}
+```
+
+**Safe Reset Implementation**:
+```cpp
+void performSafeReset() {
+    // Disable interrupts
+    cli();
+    // Enable watchdog with shortest timeout (15ms)
+    wdt_enable(WDTO_15MS);
+    // Wait for watchdog reset
+    while(1) {}
 }
 ```
 
@@ -126,15 +138,23 @@ The DEMO mode uses these existing functions safely:
 - [x] Readable function and variable names
 - [x] Consistent coding style with original
 - [x] Proper debounce implementation
-- [x] Safe hardware reset mechanism
+- [x] Safe hardware reset mechanism (watchdog timer)
+- [x] Non-blocking display messages with timeout protection
 - [x] No memory leaks or buffer overflows
-- [x] Compatible with Arduino Mega
+- [x] Compatible with Arduino Mega and different bootloaders
 
 ### ✅ Documentation
 - [x] README updated (English & Italian)
 - [x] Local Readme.txt updated
 - [x] Technical documentation created
 - [x] Inline comments where needed
+- [x] Code review feedback incorporated
+
+### ✅ Code Review Fixes Applied
+- [x] Replaced unsafe `asm volatile ("jmp 0")` with watchdog timer reset
+- [x] Added 2-second timeout to all blocking while loops
+- [x] Removed unused function pointer declaration
+- [x] Updated documentation to match actual implementation
 
 ## Testing Recommendations
 

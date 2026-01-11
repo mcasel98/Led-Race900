@@ -11,7 +11,8 @@ The DEMO mode is a completely isolated environment that simulates a normal race 
   - Includes debounce routine to prevent false triggers
   
 - **Exit**: Hold START button for **2 seconds** during DEMO mode
-  - Triggers a hardware reset of the Arduino using `asm volatile ("jmp 0")`
+  - Triggers a hardware reset of the Arduino using watchdog timer (`wdt_enable(WDTO_15MS)`)
+  - Safe reset method that works reliably across different Arduino boards and bootloader configurations
   - Can be activated from any DEMO state (DEMO_RACING or DEMO_WINNER)
 
 ### Complete Isolation
