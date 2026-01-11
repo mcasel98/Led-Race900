@@ -1,5 +1,15 @@
 # DEMO Mode - User Guide
 
+## Installation
+
+To use DEMO mode, upload one of the `_WITH_DEMO` versions to your Arduino:
+- **Italian**: `src/OpenLedRace_final/OpenLedRace_final_Italiano_FIX_WITH_DEMO.ino`
+- **English**: `src/OpenLedRace_final/OpenLedRace_final_English_FIX_WITH_DEMO.ino`
+
+The original files without DEMO mode remain available:
+- **Italian (original)**: `src/OpenLedRace_final/OpenLedRace_final_Italiano_FIX.ino`
+- **English (original)**: `src/OpenLedRace_final/OpenLedRace_final_English_FIX.ino`
+
 ## Quick Start
 
 ### Activating DEMO Mode

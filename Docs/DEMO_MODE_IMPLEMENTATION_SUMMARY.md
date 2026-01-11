@@ -2,14 +2,21 @@
 
 ## Changes Made
 
-### Files Modified
-1. `src/OpenLedRace_final/OpenLedRace_final_Italiano_FIX.ino` - Italian version
-2. `src/OpenLedRace_final/OpenLedRace_final_English_FIX.ino` - English version
-3. `README.md` - Main repository README
-4. `src/OpenLedRace_final/Readme.txt` - Local README
-
 ### Files Created
-1. `Docs/DEMO_MODE_TECHNICAL.md` - Comprehensive technical documentation
+1. `src/OpenLedRace_final/OpenLedRace_final_Italiano_FIX_WITH_DEMO.ino` - Italian version with DEMO mode
+2. `src/OpenLedRace_final/OpenLedRace_final_English_FIX_WITH_DEMO.ino` - English version with DEMO mode
+3. `Docs/DEMO_MODE_TECHNICAL.md` - Comprehensive technical documentation
+4. `Docs/DEMO_MODE_USER_GUIDE.md` - User guide for DEMO mode
+5. `Docs/DEMO_MODE_IMPLEMENTATION_SUMMARY.md` - This file
+
+### Files Modified (Documentation Only)
+1. `README.md` - Main repository README (added DEMO mode section)
+
+### Original Files Preserved
+The following files remain unchanged from the original version:
+1. `src/OpenLedRace_final/OpenLedRace_final_Italiano_FIX.ino` - Italian version (original)
+2. `src/OpenLedRace_final/OpenLedRace_final_English_FIX.ino` - English version (original)
+3. `src/OpenLedRace_final/Readme.txt` - Local README (original)
 
 ## Code Changes Summary
 

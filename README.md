@@ -17,7 +17,11 @@ Open LED Race 900 is a virtual cars race for Neopixel LED strips, based on the O
 - Fully non-blocking logic: race simulation never pauses!
 - Podium lights, winner music, and finish flag show
 - Automatic return of cars to the starting line before every new race
-- **DEMO MODE**: Automated race with virtual players for demonstrations
+- **DEMO MODE**: Automated race with virtual players for demonstrations (available in `_WITH_DEMO` versions)
+
+### Available Versions
+- **Standard**: `OpenLedRace_final_English_FIX.ino` - Original racing experience
+- **With DEMO Mode**: `OpenLedRace_final_English_FIX_WITH_DEMO.ino` - Includes DEMO mode for autonomous demonstrations
 
 ### DEMO Mode
 **Entry**: Hold START button for at least 3 seconds from the main menu  
@@ -60,7 +64,11 @@ Open LED Race 900 è una gara di “macchinine” virtuali per strip LED Neopixe
 - Logica totalmente non bloccante: la gara non si ferma mai!
 - Premiazione podio, musica per il vincitore e animazione bandiera finale
 - Riporto automatico delle macchine sulla linea di partenza ad ogni nuova gara
-- **MODALITÀ DEMO**: Gara automatica con giocatori virtuali per dimostrazioni
+- **MODALITÀ DEMO**: Gara automatica con giocatori virtuali per dimostrazioni (disponibile nelle versioni `_WITH_DEMO`)
+
+### Versioni Disponibili
+- **Standard**: `OpenLedRace_final_Italiano_FIX.ino` - Esperienza di gara originale
+- **Con Modalità DEMO**: `OpenLedRace_final_Italiano_FIX_WITH_DEMO.ino` - Include modalità DEMO per dimostrazioni autonome
 
 ### Modalità DEMO
 **Ingresso**: Tenere premuto START per almeno 3 secondi dal menu principale  
